@@ -74,7 +74,7 @@ export default class App extends Component {
 
   async onChange(e) {
     this.setState({ searchInput: e.target.value });
-    this.setState({ pokemon: await this.getPokemon(`/pokemon/${e.target.value}`) });
+    this.setState({ pokemon: await this.getPokemon(`/pokemon/${e.target.value.toLowerCase()}`) });
   }
 
   createPagination() {
