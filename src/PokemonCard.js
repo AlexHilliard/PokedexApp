@@ -8,6 +8,13 @@ import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 
+const toLocalUpper = txt => {
+    if(txt){
+        return txt.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")
+    }
+};
+
+
 const useStyles = makeStyles({
     minWidth: '300px'
   });
@@ -15,7 +22,6 @@ const useStyles = makeStyles({
 const PokemonCard = props => {
     const classes = useStyles();
     const history = useHistory();
-    console.log(props)
     return (
         <Card className={classes.root} onClick={() => {
             history.push(`/pokemon/${props.name}`)
@@ -24,11 +30,11 @@ const PokemonCard = props => {
                 <img
                     style={{aspectRatio:"1/1", width:"100%"}}
                     src={props.sprite}
-                    title={props.name}
+                    alt={toLocalUpper(props.name)}
                 />
                 <CardContent>
                     <Typography gutterBottom variant="h5" component="h2">
-                        {props.name}
+                        {toLocalUpper(props.name)}
                     </Typography>
                 </CardContent>
             </CardActionArea>

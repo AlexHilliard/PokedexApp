@@ -9,6 +9,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 import { ButtonGroup } from '@material-ui/core';
+import { all as allPoke } from 'pokemon' ;
+import similarity from 'string-similarity';
 
 export default class App extends Component {
   constructor(props) {
@@ -74,7 +76,28 @@ export default class App extends Component {
 
   async onChange(e) {
     this.setState({ searchInput: e.target.value });
-    this.setState({ pokemon: await this.getPokemon(`/pokemon/${e.target.value.toLowerCase()}`) });
+    if(e.target.value == ""){
+      this.setState({ pokemon: await this.getPokemon('/pokemon') });
+      return;
+    }
+    let pokeRating = similarity.findBestMatch(e.target.value.toLowerCase(), allPoke());
+    const autoCom = pokeRating.ratings.filter(rating => rating.rating > .25).sort((a, b) => {
+     if(a.rating > b.rating){
+       return -1;
+     }
+     else if(a.rating < b.rating){
+       return 1;
+     }
+     else{
+       return 0;
+     }
+    }).slice(0, 20);
+    const pokemonResult = await Promise.all(autoCom.map(async i => {
+      return (await this.getPokemon(`/pokemon/${i.target.toLowerCase().replace(" ", "-").replace(".", "").replace("♀", "-f").replace("♂", "-m").replace("'", "").replace(":", "")}`))[0]
+    }))
+    console.log(pokemonResult)
+    
+    this.setState({ pokemon: pokemonResult });
   }
 
   createPagination() {
@@ -98,13 +121,17 @@ export default class App extends Component {
     return (
       <>
         <Router>
-          <nav>
-            <input type='search' onChange={this.onChange} />
-          </nav>
+            <header id="nav1" style={{display: "grid", gridTemplateColumns: "max-content auto"}}>
+              <img style={{height: "75px", alignContent: "right"}} src="/HomeText.png"/>
+              <div id="nav2" style={{width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "flex-end", alignText: "right"}}>
+                <input class="searchBar" style={{marginRight: "0.5%"}} type='search' placeholder="Search Here" onChange={this.onChange} />
+              </div>
+            </header>
+          
           <Switch>
             <Route path="/pokemon/:pokemonName" component={PokemonPage} />
             <Route exact path="/">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: "25px" }}>
+              <div style={{margin: "2%", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: "25px" }}>
                 {
                   this.state.pokemon?.map(poke => {
                     if (poke || poke?.sprite) {
@@ -131,9 +158,17 @@ export default class App extends Component {
                   }
 
                   {
-                    this.createPagination().map((page, index) => index % 4 === 0 ? page : null)
+                    this.createPagination().map((page, index) => index % 3 === 0 ? page : null)
                   }
-
+                    <Button
+                      variant="contained"
+                      key={Math.ceil(this.state.count / 20) -1}
+                      onClick={async () => {
+                        this.setState({ pokemon: await this.getPokemon(`/pokemon?offset=${(Math.ceil(this.state.count / 20) -1) * 20}&limit=20`) });
+                      }}
+                    >
+                      {Math.ceil(this.state.count / 20)}
+                    </Button>
                   {
                     this.state.next ? <Button
                       variant="contained"
